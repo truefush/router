@@ -1,13 +1,30 @@
 const express = require('express');
-const routerProductos = require('./routes/productos.js');
-
-const PORT = 8080;
+const multer = require('multer');
 const app = express();
-const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-server.on('error', err => console.log(`Error: ${err}`));
-
+const PORT = 8080;
+const server = app.listen(PORT, () => console.log(`Server listening on PORT ${PORT}`));
+server.on("error", err => console.log(`Error: ${err}`));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 
-app.use('/api', routerProductos);
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads')
+    },
+    filename: (req, file, cb) => {
+        const filename = `${Date.now()}-${file.originalname}`
+        cb(null, filename);
+    }
+})
+
+const upload = multer({ storage: storage })
+
+app.post('/uploadfile', upload.single('myFile'), (req, res) => {
+    const file = req.file;
+    console.log(file);
+    if (!file) {
+        return res.status(400).send('Error subiendo el archivo');
+    }
+    res.status(200).send(`Archivo subido correctamente!`);
+})
